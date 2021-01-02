@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<h1> AMONG US Sankey Diagram Generator </h1>
+<br>
+
+<table valign="center" id="userForm">
+    <tr>
+        <td>
+            <label for="gs">Games Started: </label>
+        </td><td>
+        <input type="number" id="gs" name="gs" min="1"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="gf">Games Finished: </label>
+        </td><td>
+        <input type="number" id="gf" name="gf" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="tc">Times Crewmate: </label>
+        </td><td>
+        <input type="number" id="tc" name="tc" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="ti">Times Impostor: </label>
+        </td><td>
+        <input type="number" id="ti" name="ti" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="ikw">Imp. Kill Wins: </label>
+        </td><td>
+        <input type="number" id="ikw" name="ikw" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="ivw">Imp. Vote Wins: </label>
+        </td><td>
+        <input type="number" id="ivw" name="ivw" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="isw">Imp. Sabotage Wins: </label>
+        </td><td>
+        <input type="number" id="isw" name="isw" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="cvw">Crew. Vote Wins: </label>
+        </td><td>
+        <input type="number" id="cvw" name="cvw" min="0"><br><br>
+    </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="ctw">Crew. Task Wins: </label>
+        </td><td>
+        <input type="number" id="ctw" name="ctw" min="0"><br><br>
+    </td>
+    </tr>
+</table>
+
+<p id="crewmatedetails"> </p>
+<p id="impostordetails"> </p>
+<p id="overalldetails"> </p>
+<br>
+<button onclick="generateSankey()"> Generate diagram </button>
+<br><br>
+
+<div id="sankey_multiple"> </div>
+
+<script type="text/javascript">
+
+	function generateSankey () {
+	try {
+		var gs = Number(document.getElementById('gs').value);
+		var gf = Number(document.getElementById('gf').value);
+		var tc = Number(document.getElementById('tc').value);
+		var ti = Number(document.getElementById('ti').value);
+		var ivw = Number(document.getElementById('ivw').value);
+		var ikw = Number(document.getElementById('ikw').value);
+		var isw = Number(document.getElementById('isw').value);
+		var cvw = Number(document.getElementById('cvw').value);
+		var ctw = Number(document.getElementById('ctw').value);
+
+		loadSankey(gs, gf, tc, ti, ikw, ivw, isw, cvw, ctw);
+		} catch (e) {
+			alert('Invalid input detected');
+		}
+	}
+
+
+	/*
+		Sample test inputs provided:
+	loadSankey(399, 323, 327, 72, 24, 7, 3, 144, 14);
+	loadSankey(359, 344, 289, 70, 17, 24, 0, 159, 15);
+	loadSankey(417, 341, 342, 75, 24, 7, 3, 154, 14);
+	*/
+	loadSankey(359, 344, 289, 70, 17, 24, 0, 159, 15);
+
+	function invalidInput (message) {
+		alert(message);
+	}
+
+	function isInputValid (gamesStarted, gamesFinished, timesCrewmate, timesimpostor,
+							impostorWins, crewmateWins, losses) {
+
+		if (gamesFinished > gamesStarted) {
+			invalidInput("Games Finished > Games Started");
+			return false;
+		}
+
+		if (timesCrewmate < crewmateWins) {
+			invalidInput("More crewmate wins than games played");
+			return false;
+		}
+
+		if (timesimpostor < impostorWins) {
+			invalidInput("More impostor wins than games played");
+			return false;
+		}
+
+		if (gamesStarted != timesCrewmate + timesimpostor) {
+			invalidInput("Games started != times crewmate + times impostor");
+			return false;
+		}
+
+		if (losses < 0) {
+			invalidInput("More wins than games finished");
+			return false;
+		}
+
+		return true;
+	}
+
+	function loadSankey(gamesStarted, gamesFinished, timesCrewmate, timesImpostor,
+						impostorKill, impostorVote, impostorSabotage, crewmateVote, crewmateTask) {
+
+		var impostorWins = impostorKill + impostorSabotage + impostorVote;
+		var crewmateWins = crewmateTask + crewmateVote;
+		var losses = gamesFinished - impostorWins - crewmateWins;
+		var unfinished = gamesStarted - gamesFinished;
+		var dnw = losses + unfinished;
+
+		var sGamesStarted = 'Games Started: ' + gamesStarted;
+		var sCrewmate = 'Crewmate: ' + timesCrewmate;
+		var sCrewWin = 'Crewmate Win: ' + crewmateWins;
+		var sCrewVote = 'Crewmate Vote Win: ' + crewmateVote;
+		var sCrewTask = 'Crewmate Task Win: ' + crewmateTask;
+		var sImpostor = 'Impostor: ' + timesImpostor;
+		var sImpostorWin = 'Impostor Win: ' + impostorWins;
+		var sImpostorVote = 'Impostor Vote Win: ' + impostorVote;
+		var sImpostorKill = 'Impostor Kill Win: ' + impostorKill;
+		var sImpostorSabotage = 'Impostor Sabotage Win: ' + impostorSabotage;
+		var sDNW = 'Did not win: ' + dnw;
+		var sDNF = 'DNF: ' + unfinished;
+		var sLost = 'Lost: ' + losses;
+
+		if (!isInputValid(gamesStarted, gamesFinished, timesCrewmate, timesImpostor,
+							impostorWins, crewmateWins, losses)) {
+			return;
+		}
+
+		var details = document.getElementById('overalldetails');
+		var crewmateDetails = document.getElementById('crewmatedetails');
+		var impostorDetails = document.getElementById('impostordetails');
+
+		details.innerHTML = '';
+		crewmateDetails.innerHTML = '';
+		impostorDetails.innerHTML = '';
+
+		if (gamesFinished != 0) {
+			details.innerHTML = "You won <b>" + (crewmateWins + impostorWins) + "</b> out of <b>" + gamesFinished + "</b> completed games (<b>" + ((crewmateWins + impostorWins) / gamesFinished * 100).toFixed(2) +
+								"%</b>), or <b>" + ((crewmateWins + impostorWins) / gamesStarted * 100).toFixed(2) + "%</b> of all games started";
+		}
+
+		if (timesImpostor != 0) {
+			impostorDetails.innerHTML = "You won <b>" + impostorWins + "</b> games as impostor out of <b>" + timesImpostor + "</b> total games (between <b>" + (impostorWins / timesImpostor * 100).toFixed(2) +
+										"%</b> and <b>" + (impostorWins / Math.max(1, impostorWins, timesImpostor - unfinished) * 100).toFixed(2) + "%</b> of finished games)";
+		}
+
+		if (timesCrewmate != 0) {
+			crewmateDetails.innerHTML = "You won <b>" + crewmateWins + "</b> games as crewmate out of <b>" + timesCrewmate + "</b> total games (between <b>" + (crewmateWins / timesCrewmate * 100).toFixed(2) +
+										"%</b> and <b>" + (crewmateWins / Math.max(1, crewmateWins, timesCrewmate - unfinished) * 100).toFixed(2) + "%</b> of finished games)";
+		}
+
+		google.charts.load("current", {packages:["sankey"]});
+		google.charts.setOnLoadCallback(drawChart);
+
+		function drawChart() {
+			var data = new google.visualization.DataTable();
+			data.addColumn('string', 'From');
+			data.addColumn('string', 'To');
+			data.addColumn('number', 'Weight');
+			if (gamesStarted > 0) {
+
+				if (timesCrewmate > 0) {
+					data.addRow( [ sGamesStarted, sCrewmate, timesCrewmate ] );
+
+					if (crewmateWins > 0) {
+						data.addRow( [sCrewmate, sCrewWin, crewmateWins ] );
+						if (crewmateVote > 0) {
+							data.addRow( [sCrewWin, sCrewVote, crewmateVote] );
+						}
+						if (crewmateTask > 0) {
+							data.addRow( [sCrewWin, sCrewTask, crewmateTask ] );
+						}
+
+					}
+				}
+
+				if (timesImpostor > 0) {
+					data.addRow( [sGamesStarted, sImpostor, timesImpostor ] );
+					if (impostorWins > 0) {
+						data.addRow( [sImpostor, sImpostorWin, impostorWins ] );
+						if (impostorVote > 0) {
+							data.addRow( [sImpostorWin, sImpostorVote, impostorVote ] );
+						}
+						if (impostorKill > 0) {
+							data.addRow( [sImpostorWin, sImpostorKill, impostorKill ] );
+						}
+						if (impostorSabotage > 0) {
+							data.addRow( [sImpostorWin, sImpostorSabotage, impostorSabotage ] );
+						}
+					}
+				}
+
+				if (impostorWins != timesImpostor) {
+					data.addRow( [sImpostor, sDNW, timesImpostor - impostorWins ] );
+				}
+				if (crewmateWins != timesCrewmate) {
+					data.addRow( [sCrewmate, sDNW, timesCrewmate - crewmateWins ] );
+				}
+				if (unfinished > 0) {
+					data.addRow( [sDNW, sDNF, unfinished ] );
+				}
+				if (losses > 0) {
+					data.addRow( [sDNW, sLost, losses ] );
+				}
+			}
+
+			// Set chart options
+			var options = {
+				width: 700,
+				height: 700,
+				title: 'Among Us Statistics',
+				trigger: 'none'
+			};
+
+			// Instantiate and draw our chart, passing in some options.
+			var chart = new google.visualization.Sankey(document.getElementById('sankey_multiple'));
+			chart.draw(data, options);
+		 }
+	}
+</script>
+
+</body>
+
+</html>
